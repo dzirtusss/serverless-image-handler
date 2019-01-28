@@ -92,6 +92,10 @@ Parameters:
       -- for example 'serverless-image-handler-ui/'
     AllowedPattern: '^(?!/)[a-zA-Z][a-zA-Z0-9-]+/$'
 
+  ThumborSecurityKey:
+    Description: Thumbor SECURITY_KEY (will disable ALLOW_UNSAFE_URL if specified)
+    Type: String
+
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
@@ -200,6 +204,9 @@ Conditions:
   AutoDeployUI: !Equals
     - !Ref DeployUI
     - 'Yes'
+  UnsafeUrls: !Equals
+    - !Ref ThumborSecurityKey
+    - ''
 
 Resources:
   # demo bucket
@@ -398,7 +405,14 @@ Resources:
             - CreateUniqueID
             - UUID
           LOG_LEVEL: INFO
-          ALLOW_UNSAFE_URL: True
+          ALLOW_UNSAFE_URL: !If
+          - UnsafeUrls
+          - True
+          - False
+          SECURITY_KEY: !If
+          - UnsafeUrls
+          - ''
+          - !Ref ThumborSecurityKey
   ImageHandlerLogGroup:
     DeletionPolicy: Retain
     Type: 'AWS::Logs::LogGroup'
